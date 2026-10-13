@@ -108,7 +108,8 @@ process bam_bin {
         echo "Malformed BAM name, ${sorted_bam}"
         exit 1
     fi
-
+    
+    declare -A assembly_sizes
     source $assembly_sizes
     total_size=\${assembly_sizes[\$assembly]}
     echo "Assembly \$assembly, run \$run, total size \$total_size"

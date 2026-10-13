@@ -67,7 +67,10 @@ process rnaseq_divide_by_strandedness {
                     if (!(run_id in known)) {
                         best = ""
                         for (accession in known) {
-                            if (index(run_id, accession "_") == 1 && length(accession) > length(best)) {
+                            safe_accession = accession
+                            gsub(/[^A-Za-z0-9_.]/, "_", safe_accession)
+                            if ((run_id == safe_accession || index(run_id, safe_accession "_") == 1) &&
+                                length(accession) > length(best)) {
                                 best = accession
                             }
                         }

@@ -1123,19 +1123,18 @@ def _generate_fake_metadata(prefixes: defaultdict[str, list[str]], sra_metadata_
             error_msg += f"Error: Run set {run_name} has multiple run ids in read files: {srrs}\n"
             continue
         run_name_resolved = srrs[0] if srrs else run_name
-        if is_sra(run_name_resolved):
-            paired = 'paired' if len(files) == 2 else 'unpaired'
-            if run_name_resolved in sra_metadata_map:
-                out_rec = list(sra_metadata_map[run_name_resolved])
-                if len(out_rec) == 13:
-                    out_rec.append('NA') # Insert 'NA' for bio_project
-                    out_rec.append('NA') # Insert 'NA' for scientific_name
-                    out_rec.append('0')  # Insert '0' for tax_id
-                    out_rec.append('NA') # Insert 'NA' for release_date
-            else:
-                out_rec = [run_name_resolved, 'NA', paired, '2', '2', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA',
-                           'SAMN_' + run_name_resolved, '0', 'NA', 'NA', '0', 'NA']
-            not_sra.append(SraMetadata(*out_rec))
+        paired = 'paired' if len(files) == 2 else 'unpaired'
+        if is_sra(run_name_resolved) and run_name_resolved in sra_metadata_map:
+            out_rec = list(sra_metadata_map[run_name_resolved])
+            if len(out_rec) == 13:
+                out_rec.append('NA') # Insert 'NA' for bio_project
+                out_rec.append('NA') # Insert 'NA' for scientific_name
+                out_rec.append('0')  # Insert '0' for tax_id
+                out_rec.append('NA') # Insert 'NA' for release_date
+        else:
+            out_rec = [run_name_resolved, 'NA', paired, '2', '2', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA',
+                       'SAMN_' + run_name_resolved, '0', 'NA', 'NA', '0', 'NA']
+        not_sra.append(SraMetadata(*out_rec))
     return not_sra, error_msg
 
 

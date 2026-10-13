@@ -44,6 +44,9 @@ process run_star {
         // path "per_run_counts.txt", emit: 'per_run_counts'
     script:
         def assembly=genome_file.baseName.toString().replaceFirst(/\.(fa(sta)?|asn[bt]?)$/, "")
+        // NCBI derives run IDs from BAM names, so do not expose mate-file suffixes or hyphen separators.
+        def safe_sample_id = sampleID.toString().replaceAll(/[^A-Za-z0-9_.]/, '_')
+        def normalized_bam = "${assembly}_genomic-${safe_sample_id}-Aligned.out.Sorted.bam"
         seqkit_cmd = ""
         if ( fasta_rna_file[0] && fasta_rna_file[1] ) {
             query_str = "${fasta_rna_file[0]},${fasta_rna_file[1]}"
@@ -92,6 +95,17 @@ process run_star {
         # recreate index
         [[ -f "\${bam}.bai" ]] && samtools index -@ 4 -b "\$bam"
         [[ -f "\${bam}.csi" ]] && samtools index -@ 4 -c "\$bam"
+
+        normalized_bam="${normalized_bam}"
+        if [[ "\$bam" != "\$normalized_bam" ]]; then
+            if [[ -e "\$normalized_bam" ]]; then
+                echo "Refusing to overwrite duplicate normalized BAM name: \$normalized_bam" >&2
+                exit 1
+            fi
+            mv "\$bam" "\$normalized_bam"
+            [[ ! -f "\${bam}.bai" ]] || mv "\${bam}.bai" "\${normalized_bam}.bai"
+            [[ ! -f "\${bam}.csi" ]] || mv "\${bam}.csi" "\${normalized_bam}.csi"
+        fi
     done
     cat STAR_logs/*-Log.out > STAR_C_logs/${assembly}-${sampleID}.${task.index}-Log.out
     cat STAR_logs/*-Log.progress.out > STAR_C_logs/${assembly}-${sampleID}.${task.index}-Log.progress.out
